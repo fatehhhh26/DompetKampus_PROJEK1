@@ -15,7 +15,8 @@ class SavingGoalScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final goals = context.watch<SavingGoalProvider>().goals;
+    final provider = context.watch<SavingGoalProvider>();
+    final goals = provider.goals;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tabungan')),
@@ -25,23 +26,52 @@ class SavingGoalScreen extends StatelessWidget {
         label: const Text('Target'),
       ),
       body: SafeArea(
-        child: goals.isEmpty
-            ? const SingleChildScrollView(
-                padding: EdgeInsets.all(16),
-                child: EmptyStateWidget(
-                  icon: Icons.savings_outlined,
-                  title: 'Belum ada target',
-                  message:
-                      'Buat target tabungan untuk laptop, kos, atau kebutuhan kuliah.',
+        child: RefreshIndicator(
+          onRefresh: () => context.read<SavingGoalProvider>().loadSavingGoals(),
+          child: provider.isLoading
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: const [
+                    SizedBox(
+                      height: 360,
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  ],
+                )
+              : provider.errorMessage != null
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    EmptyStateWidget(
+                      icon: Icons.wifi_off_rounded,
+                      title: 'Gagal memuat target',
+                      message: provider.errorMessage!,
+                    ),
+                  ],
+                )
+              : goals.isEmpty
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    EmptyStateWidget(
+                      icon: Icons.savings_outlined,
+                      title: 'Belum ada target',
+                      message:
+                          'Buat target tabungan untuk laptop, kos, atau kebutuhan kuliah.',
+                    ),
+                  ],
+                )
+              : ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  itemCount: goals.length,
+                  itemBuilder: (context, index) {
+                    return _SavingGoalCard(goal: goals[index]);
+                  },
                 ),
-              )
-            : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: goals.length,
-                itemBuilder: (context, index) {
-                  return _SavingGoalCard(goal: goals[index]);
-                },
-              ),
+        ),
       ),
     );
   }
@@ -238,7 +268,17 @@ class _SavingGoalCard extends StatelessWidget {
     );
 
     if (confirmed != true || !context.mounted) return;
-    await context.read<SavingGoalProvider>().deleteGoal(id);
+    final provider = context.read<SavingGoalProvider>();
+    final success = await provider.deleteGoal(id);
+    if (!context.mounted) return;
+
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.errorMessage ?? 'Gagal menghapus target.'),
+        ),
+      );
+    }
   }
 
   void _showAddAmountDialog(BuildContext context, SavingGoalModel goal) {
@@ -455,7 +495,8 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
   Future<void> _saveGoal() async {
     if (!_formKey.currentState!.validate() || _deadline == null) return;
 
-    await context.read<SavingGoalProvider>().addGoal(
+    final provider = context.read<SavingGoalProvider>();
+    final success = await provider.addGoal(
       SavingGoalModel(
         id: const Uuid().v4(),
         title: _titleController.text.trim(),
@@ -468,6 +509,15 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
     );
 
     if (!mounted) return;
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.errorMessage ?? 'Gagal menyimpan target.'),
+        ),
+      );
+      return;
+    }
+
     Navigator.of(context).pop();
   }
 
@@ -534,12 +584,22 @@ class _AddAmountDialogState extends State<_AddAmountDialog> {
   Future<void> _saveAmount() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await context.read<SavingGoalProvider>().updateCurrentAmount(
+    final provider = context.read<SavingGoalProvider>();
+    final success = await provider.updateCurrentAmount(
       widget.goal.id,
       _parseAmount(_amountController.text),
     );
 
     if (!mounted) return;
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.errorMessage ?? 'Gagal menambah nominal.'),
+        ),
+      );
+      return;
+    }
+
     Navigator.of(context).pop();
   }
 

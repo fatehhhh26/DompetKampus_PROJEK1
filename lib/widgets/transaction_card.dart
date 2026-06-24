@@ -47,11 +47,15 @@ class TransactionCard extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              '$prefix${CurrencyFormatter.format(transaction.amount)}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: color, fontWeight: FontWeight.bold),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 104),
+              child: Text(
+                '$prefix${CurrencyFormatter.format(transaction.amount)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: TextStyle(color: color, fontWeight: FontWeight.bold),
+              ),
             ),
             if (onDelete != null) ...[
               const SizedBox(width: 4),

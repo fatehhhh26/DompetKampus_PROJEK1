@@ -59,9 +59,31 @@ class SavingGoalModel {
     };
   }
 
+  Map<String, dynamic> toSupabaseMap() {
+    final completed = isCompleted || currentAmount >= targetAmount;
+
+    return {
+      'id': id,
+      'title': title,
+      'target_amount': targetAmount,
+      'current_amount': currentAmount,
+      'deadline': _formatDate(deadline),
+      'note': note,
+      'is_completed': completed,
+    };
+  }
+
   factory SavingGoalModel.fromMap(Map<dynamic, dynamic> map) {
-    final targetAmount = _readAmount(map['targetAmount']);
-    final currentAmount = _readAmount(map['currentAmount']);
+    final targetAmount = _readAmount(
+      map['targetAmount'] ?? map['target_amount'],
+    );
+    final currentAmount = _readAmount(
+      map['currentAmount'] ?? map['current_amount'],
+    );
+    final rawCompleted = map['isCompleted'] ?? map['is_completed'];
+    final completedFromMap = rawCompleted is bool
+        ? rawCompleted
+        : rawCompleted?.toString() == 'true';
 
     return SavingGoalModel(
       id: map['id']?.toString() ?? '',
@@ -72,12 +94,23 @@ class SavingGoalModel {
           DateTime.tryParse(map['deadline']?.toString() ?? '') ??
           DateTime.now(),
       note: map['note']?.toString() ?? '',
-      isCompleted: currentAmount >= targetAmount,
+      isCompleted: completedFromMap || currentAmount >= targetAmount,
     );
+  }
+
+  factory SavingGoalModel.fromJson(Map<String, dynamic> json) {
+    return SavingGoalModel.fromMap(json);
   }
 
   static double _readAmount(dynamic value) {
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static String _formatDate(DateTime value) {
+    final year = value.year.toString().padLeft(4, '0');
+    final month = value.month.toString().padLeft(2, '0');
+    final day = value.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 }

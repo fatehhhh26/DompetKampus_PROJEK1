@@ -35,6 +35,18 @@ class TransactionModel {
     };
   }
 
+  Map<String, dynamic> toSupabaseMap() {
+    return {
+      'id': id,
+      'title': title,
+      'amount': amount,
+      'type': type,
+      'category': category,
+      'date': _formatDate(date),
+      'note': note,
+    };
+  }
+
   factory TransactionModel.fromMap(Map<dynamic, dynamic> map) {
     final rawType = map['type']?.toString() ?? expenseType;
     final normalizedType = rawType == incomeType ? incomeType : expenseType;
@@ -50,8 +62,19 @@ class TransactionModel {
     );
   }
 
+  factory TransactionModel.fromJson(Map<String, dynamic> json) {
+    return TransactionModel.fromMap(json);
+  }
+
   static double _readAmount(dynamic value) {
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static String _formatDate(DateTime value) {
+    final year = value.year.toString().padLeft(4, '0');
+    final month = value.month.toString().padLeft(2, '0');
+    final day = value.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 }

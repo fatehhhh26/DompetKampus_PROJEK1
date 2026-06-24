@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../core/constants/app_colors.dart';
@@ -24,7 +25,8 @@ class ChartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final transactions = context.watch<TransactionProvider>().transactions;
+    final provider = context.watch<TransactionProvider>();
+    final transactions = provider.filteredTransactions;
     final expenseByCategory = _groupExpensesByCategory(transactions);
     final totalExpense = expenseByCategory.values.fold<double>(
       0,
@@ -34,14 +36,21 @@ class ChartScreen extends StatelessWidget {
     if (expenseByCategory.isEmpty || totalExpense <= 0) {
       return Scaffold(
         appBar: AppBar(title: const Text('Grafik')),
-        body: const SafeArea(
+        body: SafeArea(
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(16),
-            child: EmptyStateWidget(
-              icon: Icons.pie_chart_outline,
-              title: 'Belum ada pengeluaran',
-              message:
-                  'Grafik kategori akan muncul setelah kamu mencatat pengeluaran.',
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _MonthFilterHeader(provider: provider),
+                const SizedBox(height: 16),
+                const EmptyStateWidget(
+                  icon: Icons.pie_chart_outline,
+                  title: 'Belum ada pengeluaran',
+                  message:
+                      'Grafik kategori akan muncul setelah kamu mencatat pengeluaran.',
+                ),
+              ],
             ),
           ),
         ),
@@ -60,6 +69,8 @@ class ChartScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              _MonthFilterHeader(provider: provider),
+              const SizedBox(height: 16),
               _SummaryGrid(
                 totalExpense: totalExpense,
                 biggestCategory: biggestCategory.key,
@@ -171,6 +182,52 @@ class ChartScreen extends StatelessWidget {
         fontWeight: FontWeight.bold,
       ),
     );
+  }
+}
+
+class _MonthFilterHeader extends StatelessWidget {
+  const _MonthFilterHeader({required this.provider});
+
+  final TransactionProvider provider;
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedMonth = provider.selectedMonth;
+    final label = selectedMonth == null
+        ? 'Semua Data'
+        : DateFormat('MMMM yyyy', 'id_ID').format(selectedMonth);
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _pickMonth(context),
+            icon: const Icon(Icons.calendar_month_outlined),
+            label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+        ),
+        const SizedBox(width: 8),
+        TextButton(
+          onPressed: provider.isAllDataSelected ? null : provider.showAllData,
+          child: const Text('Semua Data'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickMonth(BuildContext context) async {
+    final now = DateTime.now();
+    final selectedMonth = provider.selectedMonth ?? now;
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: selectedMonth,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(now.year + 5),
+      helpText: 'Pilih bulan transaksi',
+    );
+
+    if (pickedDate == null) return;
+    provider.setMonthFilter(pickedDate);
   }
 }
 

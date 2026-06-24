@@ -10,4 +10,10 @@ class AppColors {
   static const income = Color(0xFF059669);
   static const expense = Color(0xFFDC2626);
   static const border = Color(0xFFE5E7EB);
+  static const darkBackground = Color(0xFF0F172A);
+  static const darkSurface = Color(0xFF111827);
+  static const darkSurfaceVariant = Color(0xFF1F2937);
+  static const darkTextPrimary = Color(0xFFF9FAFB);
+  static const darkTextSecondary = Color(0xFFCBD5E1);
+  static const darkBorder = Color(0xFF334155);
 }

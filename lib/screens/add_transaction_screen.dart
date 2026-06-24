@@ -237,13 +237,24 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
 
     final provider = context.read<TransactionProvider>();
+    final bool success;
     if (_isEditMode) {
-      await provider.updateTransaction(transaction);
+      success = await provider.updateTransaction(transaction);
     } else {
-      await provider.addTransaction(transaction);
+      success = await provider.addTransaction(transaction);
     }
 
     if (!mounted) return;
+
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.errorMessage ?? 'Gagal menyimpan transaksi.'),
+        ),
+      );
+      return;
+    }
+
     Navigator.of(context).pop(_isEditMode);
   }
 

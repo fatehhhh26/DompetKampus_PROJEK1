@@ -1,42 +1,50 @@
 # DompetKampus
 
-DompetKampus adalah aplikasi Flutter untuk membantu mahasiswa mencatat dan memantau keuangan harian. Aplikasi ini berjalan tanpa backend dan menyimpan data secara lokal menggunakan Hive.
+DompetKampus adalah aplikasi manajemen keuangan mahasiswa berbasis Flutter dan Supabase untuk mencatat pemasukan, pengeluaran, target tabungan, budget bulanan, grafik, insight keuangan, dan export laporan PDF.
 
-## Deskripsi Aplikasi
-
-DompetKampus dibuat sebagai aplikasi manajemen keuangan mahasiswa. Pengguna dapat mencatat pemasukan, pengeluaran, melihat saldo, memantau grafik pengeluaran berdasarkan kategori, membuat target tabungan, serta membuat laporan PDF dari data transaksi.
+Project ini dikembangkan sebagai aplikasi portofolio mahasiswa TRPL dengan fokus pada pengelolaan data keuangan pribadi, autentikasi user, penyimpanan cloud berbasis Supabase, dan tampilan mobile yang rapi serta mudah digunakan.
 
 ## Fitur Utama
 
-- Splash screen, login, dan register dummy.
-- Dashboard saldo, total pemasukan, total pengeluaran, dan transaksi terbaru.
-- Tambah, edit, hapus, dan simpan transaksi secara lokal.
-- Riwayat transaksi lengkap.
-- Grafik pengeluaran berdasarkan kategori.
-- Target tabungan dengan progress, deadline, tambah nominal, dan status tercapai.
-- Export, preview, dan share laporan PDF.
-- Format mata uang Rupiah.
-- Penyimpanan lokal menggunakan Hive.
+- Register/Login Supabase
+- Logout
+- Dashboard saldo
+- Tambah, edit, hapus, dan detail transaksi
+- Search transaksi
+- Filter transaksi per bulan
+- Grafik pengeluaran
+- Target tabungan
+- Budget bulanan
+- Insight keuangan otomatis
+- Export laporan PDF
+- Dark mode
+- Reset semua data per user
+- Custom launcher icon
 
 ## Teknologi yang Digunakan
 
 - Flutter
 - Dart
 - Provider
-- Hive dan Hive Flutter
+- Supabase Auth
+- Supabase PostgreSQL
+- Row Level Security
+- Hive untuk preferensi lokal
 - fl_chart
 - pdf
 - printing
-- intl
-- uuid
+- flutter_launcher_icons
+- flutter_test
 
-## Struktur Folder
+## Struktur Folder Project
 
 ```text
 lib/
 +-- main.dart
 +-- app.dart
 +-- core/
+|   +-- config/
+|   |   +-- supabase_config.dart
 |   +-- constants/
 |   |   +-- app_colors.dart
 |   +-- theme/
@@ -44,55 +52,151 @@ lib/
 |   +-- utils/
 |       +-- currency_formatter.dart
 +-- models/
-|   +-- transaction_model.dart
+|   +-- budget_model.dart
 |   +-- saving_goal_model.dart
+|   +-- transaction_model.dart
 +-- providers/
 |   +-- auth_provider.dart
-|   +-- transaction_provider.dart
+|   +-- budget_provider.dart
 |   +-- saving_goal_provider.dart
+|   +-- theme_provider.dart
+|   +-- transaction_provider.dart
 +-- services/
+|   +-- auth_service.dart
 |   +-- local_storage_service.dart
 |   +-- pdf_service.dart
+|   +-- remote_budget_service.dart
+|   +-- remote_reset_service.dart
+|   +-- remote_saving_goal_service.dart
+|   +-- remote_transaction_service.dart
 +-- screens/
-|   +-- splash_screen.dart
-|   +-- login_screen.dart
-|   +-- register_screen.dart
-|   +-- main_navigation_screen.dart
-|   +-- dashboard_screen.dart
 |   +-- add_transaction_screen.dart
-|   +-- transaction_history_screen.dart
+|   +-- budget_screen.dart
 |   +-- chart_screen.dart
-|   +-- saving_goal_screen.dart
+|   +-- dashboard_screen.dart
+|   +-- login_screen.dart
+|   +-- main_navigation_screen.dart
+|   +-- register_screen.dart
 |   +-- report_screen.dart
+|   +-- saving_goal_screen.dart
+|   +-- settings_screen.dart
+|   +-- splash_screen.dart
+|   +-- transaction_detail_screen.dart
+|   +-- transaction_history_screen.dart
 +-- widgets/
     +-- balance_card.dart
-    +-- transaction_card.dart
     +-- custom_button.dart
     +-- empty_state_widget.dart
+    +-- transaction_card.dart
 ```
 
-## Cara Menjalankan Aplikasi
+## Struktur Tabel Supabase
 
-1. Pastikan Flutter SDK sudah terpasang.
-2. Ambil dependency:
+Database Supabase menggunakan PostgreSQL dengan Row Level Security agar setiap user hanya dapat mengakses data miliknya sendiri.
+
+### profiles
+
+Menyimpan data profil user yang terhubung dengan Supabase Auth.
+
+```text
+id uuid primary key
+name text
+email text
+created_at timestamp
+updated_at timestamp
+```
+
+### transactions
+
+Menyimpan data pemasukan dan pengeluaran user.
+
+```text
+id uuid primary key
+user_id uuid references auth.users(id)
+title text
+amount numeric
+type text
+category text
+date date
+note text
+created_at timestamp
+updated_at timestamp
+```
+
+### saving_goals
+
+Menyimpan target tabungan user.
+
+```text
+id uuid primary key
+user_id uuid references auth.users(id)
+title text
+target_amount numeric
+current_amount numeric
+deadline date
+note text
+is_completed boolean
+created_at timestamp
+updated_at timestamp
+```
+
+### budgets
+
+Menyimpan budget bulanan per kategori.
+
+```text
+id uuid primary key
+user_id uuid references auth.users(id)
+category text
+month int
+year int
+limit_amount numeric
+note text
+created_at timestamp
+updated_at timestamp
+```
+
+## Cara Setup
+
+1. Install dependency Flutter.
 
 ```bash
 flutter pub get
 ```
 
-3. Jalankan aplikasi:
+2. Buat project Supabase melalui dashboard Supabase.
+
+3. Masukkan URL dan publishable key Supabase ke file:
+
+```text
+lib/core/config/supabase_config.dart
+```
+
+Contoh:
+
+```dart
+class SupabaseConfig {
+  static const String url = 'https://project-id.supabase.co';
+  static const String anonKey = 'sb_publishable_xxx';
+}
+```
+
+4. Jalankan SQL untuk membuat tabel:
+
+- `profiles`
+- `transactions`
+- `saving_goals`
+- `budgets`
+
+5. Aktifkan Row Level Security dan buat policy agar data hanya dapat diakses oleh user pemilik data.
+
+6. Jalankan aplikasi.
 
 ```bash
 flutter run
 ```
 
-## Cara Menjalankan Test
-
-Jalankan test Flutter:
-
-```bash
-flutter test
-```
+## Cara Testing
 
 Jalankan analisis kode:
 
@@ -100,35 +204,66 @@ Jalankan analisis kode:
 flutter analyze
 ```
 
-## Screenshot Aplikasi
+Jalankan test:
 
-Screenshot belum ditambahkan ke repository.
+```bash
+flutter test
+```
 
-Rekomendasi folder:
+## Cara Build APK
+
+Build APK release:
+
+```bash
+flutter build apk --release
+```
+
+File APK hasil build biasanya berada di:
 
 ```text
-assets/screenshots/
+build/app/outputs/flutter-apk/app-release.apk
+```
+
+## Screenshot Aplikasi
+
+Screenshot dapat ditempatkan pada folder `screenshots/`.
+
+```text
+screenshots/
++-- splash.png
++-- login.png
 +-- dashboard.png
-+-- transaction_history.png
++-- history.png
 +-- chart.png
 +-- saving_goal.png
++-- budget.png
++-- settings.png
 +-- report.png
 ```
 
-Setelah screenshot tersedia, tambahkan preview seperti ini:
+Placeholder preview:
 
 ```md
-![Dashboard](assets/screenshots/dashboard.png)
+![Splash](screenshots/splash.png)
+![Login](screenshots/login.png)
+![Dashboard](screenshots/dashboard.png)
+![Riwayat](screenshots/history.png)
+![Grafik](screenshots/chart.png)
+![Target Tabungan](screenshots/saving_goal.png)
+![Budget](screenshots/budget.png)
+![Settings](screenshots/settings.png)
+![Laporan](screenshots/report.png)
 ```
 
 ## Rencana Pengembangan
 
-- Filter transaksi berdasarkan tanggal, kategori, dan jenis transaksi.
-- Pencarian transaksi.
-- Budget bulanan per kategori.
-- Backup dan restore data lokal.
-- PIN atau biometric lock.
-- Dark mode.
-- Statistik bulanan dan tahunan.
-- Export laporan dengan rentang tanggal.
-- Pengujian widget dan provider yang lebih lengkap.
+- Notifikasi tagihan
+- Scan struk
+- AI financial insight
+- Export Excel
+- Deployment web
+- Publish Play Store
+
+## Status Project
+
+DompetKampus V2.0 sudah memakai Supabase untuk autentikasi dan penyimpanan data utama. Hive tetap digunakan untuk preferensi lokal seperti dark mode, sehingga aplikasi tetap ringan dan responsif untuk penggunaan harian mahasiswa.
