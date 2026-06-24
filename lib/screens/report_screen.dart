@@ -5,12 +5,23 @@ import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/utils/currency_formatter.dart';
 import '../models/transaction_model.dart';
+import '../providers/bill_provider.dart';
+import '../providers/budget_provider.dart';
+import '../providers/saving_goal_provider.dart';
 import '../providers/transaction_provider.dart';
+import '../services/excel_service.dart';
 import '../services/pdf_service.dart';
 import '../widgets/custom_button.dart';
 
-class ReportScreen extends StatelessWidget {
+class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
+
+  @override
+  State<ReportScreen> createState() => _ReportScreenState();
+}
+
+class _ReportScreenState extends State<ReportScreen> {
+  bool _isExportingExcel = false;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +47,7 @@ class ReportScreen extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Ringkasan transaksi siap dibuat menjadi laporan PDF.',
+                'Ringkasan data siap dibuat menjadi laporan PDF atau Excel.',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: AppColors.textSecondary),
@@ -69,6 +80,14 @@ class ReportScreen extends StatelessWidget {
                   label: const Text('Preview/Share PDF'),
                 ),
               ),
+              const SizedBox(height: 12),
+              CustomButton(
+                label: _isExportingExcel ? 'Membuat Excel...' : 'Export Excel',
+                icon: Icons.table_chart_rounded,
+                onPressed: _isExportingExcel
+                    ? null
+                    : () => _exportExcel(context),
+              ),
             ],
           ),
         ),
@@ -98,6 +117,35 @@ class ReportScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _exportExcel(BuildContext context) async {
+    setState(() => _isExportingExcel = true);
+
+    try {
+      await ExcelService().exportFullReportToExcel(
+        transactions: context.read<TransactionProvider>().transactions,
+        savingGoals: context.read<SavingGoalProvider>().goals,
+        budgets: context.read<BudgetProvider>().budgets,
+        bills: context.read<BillProvider>().bills,
+      );
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Laporan Excel berhasil dibuat')),
+      );
+    } catch (error, stackTrace) {
+      debugPrint('Export Excel error: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal membuat laporan Excel. Silakan coba lagi.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isExportingExcel = false);
+    }
   }
 }
 
@@ -219,7 +267,7 @@ class _EmptyReportInfo extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Belum ada data transaksi. PDF tetap bisa dibuat dan akan menampilkan informasi kosong.',
+                'Belum ada data transaksi. PDF dan Excel tetap bisa dibuat dengan ringkasan kosong.',
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyMedium,

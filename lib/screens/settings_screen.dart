@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../core/constants/app_colors.dart';
 import '../providers/auth_provider.dart';
+import '../providers/bill_provider.dart';
 import '../providers/budget_provider.dart';
 import '../providers/saving_goal_provider.dart';
 import '../providers/theme_provider.dart';
@@ -13,7 +14,7 @@ import 'login_screen.dart';
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
-  static const appVersion = '1.3.0';
+  static const appVersion = '2.2.0';
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -89,7 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Reset akan menghapus semua transaksi, target tabungan, dan budget milik akun ini.',
+                        'Reset akan menghapus semua transaksi, target tabungan, budget, dan tagihan milik akun ini.',
                         style: TextStyle(color: AppColors.textSecondary),
                       ),
                       const SizedBox(height: 16),
@@ -146,7 +147,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AlertDialog(
           title: const Text('Reset semua data?'),
           content: const Text(
-            'Semua transaksi, target tabungan, dan budget akun ini akan dihapus permanen.',
+            'Semua transaksi, target tabungan, budget, dan tagihan akun ini akan dihapus permanen.',
           ),
           actions: [
             TextButton(
@@ -175,6 +176,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!context.mounted) return;
       await context.read<BudgetProvider>().loadBudgets();
       if (!context.mounted) return;
+      await context.read<BillProvider>().loadBills();
+      if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Semua data berhasil dihapus')),
@@ -199,6 +202,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context.read<TransactionProvider>().clear();
       context.read<SavingGoalProvider>().clear();
       context.read<BudgetProvider>().clear();
+      context.read<BillProvider>().clear();
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,

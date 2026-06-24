@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
+import '../providers/bill_provider.dart';
 import '../providers/budget_provider.dart';
 import '../providers/saving_goal_provider.dart';
 import '../providers/transaction_provider.dart';
@@ -122,10 +123,12 @@ class _LoginScreenState extends State<LoginScreen> {
       final transactionProvider = context.read<TransactionProvider>();
       final savingGoalProvider = context.read<SavingGoalProvider>();
       final budgetProvider = context.read<BudgetProvider>();
+      final billProvider = context.read<BillProvider>();
 
       transactionProvider.clear();
       savingGoalProvider.clear();
       budgetProvider.clear();
+      billProvider.clear();
 
       await transactionProvider.loadTransactions();
       if (!mounted) return;
@@ -133,10 +136,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       await budgetProvider.loadBudgets();
       if (!mounted) return;
+      await billProvider.loadBills();
+      if (!mounted) return;
       final loadError =
           transactionProvider.errorMessage ??
           savingGoalProvider.errorMessage ??
-          budgetProvider.errorMessage;
+          budgetProvider.errorMessage ??
+          billProvider.errorMessage;
       if (loadError != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

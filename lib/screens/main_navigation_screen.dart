@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
+import 'bill_screen.dart';
 import 'budget_screen.dart';
-import 'chart_screen.dart';
 import 'dashboard_screen.dart';
-import 'report_screen.dart';
-import 'saving_goal_screen.dart';
-import 'settings_screen.dart';
+import 'menu_screen.dart';
 import 'transaction_history_screen.dart';
 import 'login_screen.dart';
 
@@ -24,11 +22,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final _screens = const [
     DashboardScreen(),
     TransactionHistoryScreen(),
-    ChartScreen(),
-    SavingGoalScreen(),
     BudgetScreen(),
-    ReportScreen(),
-    SettingsScreen(),
+    BillScreen(),
+    MenuScreen(),
   ];
 
   @override
@@ -49,7 +45,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         onDestinationSelected: (index) {
           setState(() => _currentIndex = index);
         },
@@ -62,17 +58,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined),
             selectedIcon: Icon(Icons.receipt_long),
-            label: 'Riwayat',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.pie_chart_outline),
-            selectedIcon: Icon(Icons.pie_chart),
-            label: 'Grafik',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.savings_outlined),
-            selectedIcon: Icon(Icons.savings),
-            label: 'Tabungan',
+            label: 'Transaksi',
           ),
           NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
@@ -80,14 +66,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             label: 'Budget',
           ),
           NavigationDestination(
-            icon: Icon(Icons.picture_as_pdf_outlined),
-            selectedIcon: Icon(Icons.picture_as_pdf),
-            label: 'Laporan',
+            icon: Icon(Icons.notifications_active_outlined),
+            selectedIcon: Icon(Icons.notifications_active),
+            label: 'Tagihan',
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Setelan',
+            icon: Icon(Icons.apps_outlined),
+            selectedIcon: Icon(Icons.apps),
+            label: 'Menu',
           ),
         ],
       ),

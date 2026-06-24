@@ -19,6 +19,7 @@ class RemoteResetService {
       await _client.from('transactions').delete().eq('user_id', user.id);
       await _client.from('saving_goals').delete().eq('user_id', user.id);
       await _client.from('budgets').delete().eq('user_id', user.id);
+      await _client.from('bills').delete().eq('user_id', user.id);
     } on PostgrestException catch (error, stackTrace) {
       debugPrint('Supabase resetAllUserData error: ${error.message}');
       debugPrintStack(stackTrace: stackTrace);

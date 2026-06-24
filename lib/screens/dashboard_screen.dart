@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/utils/currency_formatter.dart';
+import '../models/bill_model.dart';
 import '../models/budget_model.dart';
 import '../models/transaction_model.dart';
 import '../providers/auth_provider.dart';
+import '../providers/bill_provider.dart';
 import '../providers/budget_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../widgets/balance_card.dart';
@@ -22,6 +24,7 @@ class DashboardScreen extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final transactions = context.watch<TransactionProvider>();
     final budgetProvider = context.watch<BudgetProvider>();
+    final billProvider = context.watch<BillProvider>();
     final latestTransactions = transactions.latestFilteredTransactions;
 
     return Scaffold(
@@ -41,6 +44,7 @@ class DashboardScreen extends StatelessWidget {
             await Future.wait([
               context.read<TransactionProvider>().loadTransactions(),
               context.read<BudgetProvider>().loadBudgets(),
+              context.read<BillProvider>().loadBills(),
             ]);
           },
           child: SingleChildScrollView(
@@ -71,6 +75,8 @@ class DashboardScreen extends StatelessWidget {
                   transactions: transactions.transactions,
                   budgetProvider: budgetProvider,
                 ),
+                const SizedBox(height: 16),
+                _UpcomingBillsCard(provider: billProvider),
                 const SizedBox(height: 24),
                 Row(
                   children: [
@@ -239,6 +245,133 @@ class _MonthlyInsightCard extends StatelessWidget {
     }
 
     return 'Kondisi bulan ini masih aman. Pertahankan ritme pengeluaranmu.';
+  }
+}
+
+class _UpcomingBillsCard extends StatelessWidget {
+  const _UpcomingBillsCard({required this.provider});
+
+  final BillProvider provider;
+
+  @override
+  Widget build(BuildContext context) {
+    final upcomingBills = provider.getUpcomingBills(limit: 3);
+    final overdueBills = provider.getOverdueBills();
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  overdueBills.isEmpty
+                      ? Icons.notifications_active_outlined
+                      : Icons.warning_amber_rounded,
+                  color: overdueBills.isEmpty
+                      ? AppColors.primary
+                      : AppColors.expense,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Tagihan Terdekat',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (provider.isLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (provider.errorMessage != null)
+              Text(
+                provider.errorMessage!,
+                style: const TextStyle(color: AppColors.textSecondary),
+              )
+            else if (upcomingBills.isEmpty && overdueBills.isEmpty)
+              const Text(
+                'Belum ada tagihan aktif. Tambahkan tagihan agar pengingat jatuh tempo muncul di sini.',
+                style: TextStyle(color: AppColors.textSecondary),
+              )
+            else ...[
+              if (overdueBills.isNotEmpty) ...[
+                Text(
+                  '${overdueBills.length} tagihan lewat jatuh tempo. Segera cek dan tandai lunas jika sudah dibayar.',
+                  style: const TextStyle(
+                    color: AppColors.expense,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+              for (final bill in upcomingBills) _BillSummaryRow(bill: bill),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BillSummaryRow extends StatelessWidget {
+  const _BillSummaryRow({required this.bill});
+
+  final BillModel bill;
+
+  @override
+  Widget build(BuildContext context) {
+    final dueDateLabel = DateFormat(
+      'dd MMM yyyy',
+      'id_ID',
+    ).format(bill.dueDate);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        children: [
+          const Icon(Icons.receipt_long_outlined, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  bill.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  dueDateLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            CurrencyFormatter.format(bill.amount),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
   }
 }
 

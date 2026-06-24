@@ -1,6 +1,6 @@
 # DompetKampus
 
-DompetKampus adalah aplikasi manajemen keuangan mahasiswa berbasis Flutter dan Supabase untuk mencatat pemasukan, pengeluaran, target tabungan, budget bulanan, grafik, insight keuangan, dan export laporan PDF.
+DompetKampus adalah aplikasi manajemen keuangan mahasiswa berbasis Flutter dan Supabase untuk mencatat pemasukan, pengeluaran, target tabungan, budget bulanan, tagihan, grafik, insight keuangan, export laporan PDF, dan export laporan Excel.
 
 Project ini dikembangkan sebagai aplikasi portofolio mahasiswa TRPL dengan fokus pada pengelolaan data keuangan pribadi, autentikasi user, penyimpanan cloud berbasis Supabase, dan tampilan mobile yang rapi serta mudah digunakan.
 
@@ -21,8 +21,10 @@ Versi Android DompetKampus V2.0.0 dapat diunduh melalui halaman release:
 - Grafik pengeluaran
 - Target tabungan
 - Budget bulanan
+- Notifikasi tagihan
 - Insight keuangan otomatis
 - Export laporan PDF
+- Export laporan Excel
 - Dark mode
 - Reset semua data per user
 - Custom launcher icon
@@ -39,6 +41,10 @@ Versi Android DompetKampus V2.0.0 dapat diunduh melalui halaman release:
 - fl_chart
 - pdf
 - printing
+- excel
+- share_plus
+- flutter_local_notifications
+- timezone
 - flutter_launcher_icons
 - flutter_test
 
@@ -59,10 +65,12 @@ lib/
 |       +-- currency_formatter.dart
 +-- models/
 |   +-- budget_model.dart
+|   +-- bill_model.dart
 |   +-- saving_goal_model.dart
 |   +-- transaction_model.dart
 +-- providers/
 |   +-- auth_provider.dart
+|   +-- bill_provider.dart
 |   +-- budget_provider.dart
 |   +-- saving_goal_provider.dart
 |   +-- theme_provider.dart
@@ -70,13 +78,17 @@ lib/
 +-- services/
 |   +-- auth_service.dart
 |   +-- local_storage_service.dart
+|   +-- notification_service.dart
 |   +-- pdf_service.dart
+|   +-- excel_service.dart
+|   +-- remote_bill_service.dart
 |   +-- remote_budget_service.dart
 |   +-- remote_reset_service.dart
 |   +-- remote_saving_goal_service.dart
 |   +-- remote_transaction_service.dart
 +-- screens/
 |   +-- add_transaction_screen.dart
+|   +-- bill_screen.dart
 |   +-- budget_screen.dart
 |   +-- chart_screen.dart
 |   +-- dashboard_screen.dart
@@ -162,6 +174,24 @@ created_at timestamp
 updated_at timestamp
 ```
 
+### bills
+
+Menyimpan tagihan dan jadwal pengingat lokal milik user.
+
+```text
+id uuid primary key
+user_id uuid references auth.users(id)
+title text
+amount numeric
+due_date date
+category text
+note text
+is_paid boolean
+reminder_days_before int
+created_at timestamp
+updated_at timestamp
+```
+
 ## Cara Setup
 
 1. Install dependency Flutter.
@@ -193,6 +223,7 @@ class SupabaseConfig {
 - `transactions`
 - `saving_goals`
 - `budgets`
+- `bills`
 
 5. Aktifkan Row Level Security dan buat policy agar data hanya dapat diakses oleh user pemilik data.
 
@@ -272,4 +303,4 @@ Placeholder preview:
 
 ## Status Project
 
-DompetKampus V2.0 sudah memakai Supabase untuk autentikasi dan penyimpanan data utama. Hive tetap digunakan untuk preferensi lokal seperti dark mode, sehingga aplikasi tetap ringan dan responsif untuk penggunaan harian mahasiswa.
+DompetKampus V2.2 sudah memakai Supabase untuk autentikasi dan penyimpanan data utama, termasuk tagihan per user. Versi ini juga mendukung export laporan Excel multi-sheet untuk transaksi, target tabungan, budget, dan tagihan. Hive tetap digunakan untuk preferensi lokal seperti dark mode, sehingga aplikasi tetap ringan dan responsif untuk penggunaan harian mahasiswa.

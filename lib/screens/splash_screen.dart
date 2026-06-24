@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
+import '../providers/bill_provider.dart';
 import '../providers/budget_provider.dart';
 import '../providers/saving_goal_provider.dart';
 import '../providers/transaction_provider.dart';
@@ -51,6 +52,7 @@ class _SplashScreenState extends State<SplashScreen> {
         context.read<TransactionProvider>().loadTransactions(),
         context.read<SavingGoalProvider>().loadSavingGoals(),
         context.read<BudgetProvider>().loadBudgets(),
+        context.read<BillProvider>().loadBills(),
       ]);
     } catch (_) {
       // Providers already keep friendly error messages for the visible screens.
