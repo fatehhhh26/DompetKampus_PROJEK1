@@ -4,6 +4,12 @@ DompetKampus adalah aplikasi manajemen keuangan mahasiswa berbasis Flutter dan S
 
 Project ini dikembangkan sebagai aplikasi portofolio mahasiswa TRPL dengan fokus pada pengelolaan data keuangan pribadi, autentikasi user, penyimpanan cloud berbasis Supabase, dan tampilan mobile yang rapi serta mudah digunakan.
 
+## Download APK
+
+Versi Android DompetKampus V2.0.0 dapat diunduh melalui halaman release:
+
+[Download DompetKampus V2.0.0](https://github.com/fatehhhh26/DompetKampus_PROJEK1/releases/tag/v2.0.0)
+
 ## Fitur Utama
 
 - Register/Login Supabase
