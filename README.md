@@ -1,6 +1,6 @@
 # DompetKampus
 
-DompetKampus adalah aplikasi manajemen keuangan mahasiswa berbasis Flutter dan Supabase untuk mencatat pemasukan, pengeluaran, target tabungan, budget bulanan, tagihan, grafik, insight keuangan, export laporan PDF, dan export laporan Excel.
+DompetKampus adalah aplikasi manajemen keuangan mahasiswa berbasis Flutter dan Supabase untuk mencatat pemasukan, pengeluaran, target tabungan, budget bulanan, tagihan, scan struk, grafik, insight keuangan, export laporan PDF, dan export laporan Excel.
 
 Project ini dikembangkan sebagai aplikasi portofolio mahasiswa TRPL dengan fokus pada pengelolaan data keuangan pribadi, autentikasi user, penyimpanan cloud berbasis Supabase, dan tampilan mobile yang rapi serta mudah digunakan.
 
@@ -22,7 +22,12 @@ Versi Android DompetKampus V2.0.0 dapat diunduh melalui halaman release:
 - Target tabungan
 - Budget bulanan
 - Notifikasi tagihan
-- Insight keuangan otomatis
+- Scan struk dengan OCR lokal
+- Deteksi nama toko, tanggal, item belanja, total, dan kategori dari struk
+- AI Financial Insight otomatis
+- Deteksi kebiasaan boros per kategori
+- Prediksi sisa uang sampai akhir bulan
+- Rekomendasi penghematan dan peringatan pola pengeluaran
 - Export laporan PDF
 - Export laporan Excel
 - Dark mode
@@ -43,6 +48,8 @@ Versi Android DompetKampus V2.0.0 dapat diunduh melalui halaman release:
 - printing
 - excel
 - share_plus
+- image_picker
+- google_mlkit_text_recognition
 - flutter_local_notifications
 - timezone
 - flutter_launcher_icons
@@ -81,6 +88,7 @@ lib/
 |   +-- notification_service.dart
 |   +-- pdf_service.dart
 |   +-- excel_service.dart
+|   +-- receipt_ocr_service.dart
 |   +-- remote_bill_service.dart
 |   +-- remote_budget_service.dart
 |   +-- remote_reset_service.dart
@@ -95,6 +103,7 @@ lib/
 |   +-- login_screen.dart
 |   +-- main_navigation_screen.dart
 |   +-- register_screen.dart
+|   +-- receipt_scan_screen.dart
 |   +-- report_screen.dart
 |   +-- saving_goal_screen.dart
 |   +-- settings_screen.dart
@@ -296,11 +305,11 @@ Placeholder preview:
 
 - Notifikasi tagihan
 - Scan struk
-- AI financial insight
+- AI financial insight yang lebih pintar
 - Export Excel
 - Deployment web
 - Publish Play Store
 
 ## Status Project
 
-DompetKampus V2.2 sudah memakai Supabase untuk autentikasi dan penyimpanan data utama, termasuk tagihan per user. Versi ini juga mendukung export laporan Excel multi-sheet untuk transaksi, target tabungan, budget, dan tagihan. Hive tetap digunakan untuk preferensi lokal seperti dark mode, sehingga aplikasi tetap ringan dan responsif untuk penggunaan harian mahasiswa.
+DompetKampus V2.3 sudah memakai Supabase untuk autentikasi dan penyimpanan data utama, termasuk tagihan per user. Versi ini mendukung export laporan Excel multi-sheet serta fitur Scan Struk berbasis OCR lokal untuk membantu membuat draft transaksi pengeluaran dari foto struk. Hive tetap digunakan untuk preferensi lokal seperti dark mode, sehingga aplikasi tetap ringan dan responsif untuk penggunaan harian mahasiswa.

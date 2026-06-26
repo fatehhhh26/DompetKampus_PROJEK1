@@ -7,6 +7,7 @@ import '../core/constants/app_colors.dart';
 import '../core/utils/currency_formatter.dart';
 import '../models/bill_model.dart';
 import '../providers/bill_provider.dart';
+import '../widgets/app_feedback_dialog.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/empty_state_widget.dart';
 
@@ -152,15 +153,17 @@ class _BillScreenState extends State<BillScreen> {
     final success = await provider.deleteBill(bill.id);
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? 'Tagihan berhasil dihapus.'
-              : provider.errorMessage ?? 'Gagal menghapus tagihan.',
-        ),
-      ),
-    );
+    if (success) {
+      await AppFeedbackDialog.showSuccess(
+        context,
+        message: 'Tagihan berhasil dihapus.',
+      );
+    } else {
+      await AppFeedbackDialog.showError(
+        context,
+        message: provider.errorMessage ?? 'Gagal menghapus tagihan.',
+      );
+    }
   }
 
   Future<void> _togglePaid(BuildContext context, BillModel bill) async {
@@ -170,17 +173,19 @@ class _BillScreenState extends State<BillScreen> {
         : await provider.markAsPaid(bill.id);
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? bill.isPaid
-                    ? 'Tagihan ditandai belum lunas.'
-                    : 'Tagihan ditandai lunas.'
-              : provider.errorMessage ?? 'Gagal memperbarui tagihan.',
-        ),
-      ),
-    );
+    if (success) {
+      await AppFeedbackDialog.showSuccess(
+        context,
+        message: bill.isPaid
+            ? 'Tagihan ditandai belum lunas.'
+            : 'Tagihan ditandai lunas.',
+      );
+    } else {
+      await AppFeedbackDialog.showError(
+        context,
+        message: provider.errorMessage ?? 'Gagal memperbarui tagihan.',
+      );
+    }
   }
 }
 
@@ -684,10 +689,9 @@ class _BillFormSheetState extends State<_BillFormSheet> {
 
     if (!mounted) return;
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.errorMessage ?? 'Gagal menyimpan tagihan.'),
-        ),
+      await AppFeedbackDialog.showError(
+        context,
+        message: provider.errorMessage ?? 'Gagal menyimpan tagihan.',
       );
       return;
     }

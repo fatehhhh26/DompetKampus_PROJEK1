@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../models/transaction_model.dart';
 import '../providers/transaction_provider.dart';
+import '../widgets/app_feedback_dialog.dart';
 import '../widgets/empty_state_widget.dart';
 import '../widgets/transaction_card.dart';
 import 'transaction_detail_screen.dart';
@@ -177,16 +178,16 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     if (!context.mounted) return;
 
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.errorMessage ?? 'Gagal menghapus transaksi.'),
-        ),
+      await AppFeedbackDialog.showError(
+        context,
+        message: provider.errorMessage ?? 'Gagal menghapus transaksi.',
       );
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Transaksi berhasil dihapus.')),
+    await AppFeedbackDialog.showSuccess(
+      context,
+      message: 'Transaksi berhasil dihapus.',
     );
   }
 }

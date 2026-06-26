@@ -5,12 +5,28 @@ import 'package:uuid/uuid.dart';
 
 import '../models/transaction_model.dart';
 import '../providers/transaction_provider.dart';
+import '../widgets/app_feedback_dialog.dart';
 import '../widgets/custom_button.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key, this.transaction});
+  const AddTransactionScreen({
+    super.key,
+    this.transaction,
+    this.initialType,
+    this.initialTitle,
+    this.initialAmount,
+    this.initialCategory,
+    this.initialNote,
+    this.initialDate,
+  });
 
   final TransactionModel? transaction;
+  final String? initialType;
+  final String? initialTitle;
+  final double? initialAmount;
+  final String? initialCategory;
+  final String? initialNote;
+  final DateTime? initialDate;
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -27,7 +43,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   static const _expenseCategories = [
     'Makanan',
+    'Belanja',
     'Transportasi',
+    'Print/Tugas',
     'Kuliah',
     'Kos',
     'Internet',
@@ -55,7 +73,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     super.initState();
 
     final transaction = widget.transaction;
-    if (transaction == null) return;
+    if (transaction == null) {
+      _titleController.text = widget.initialTitle ?? '';
+      _amountController.text = widget.initialAmount == null
+          ? ''
+          : widget.initialAmount!.toStringAsFixed(0);
+      _noteController.text = widget.initialNote ?? '';
+      _type = widget.initialType == TransactionModel.incomeType
+          ? TransactionModel.incomeType
+          : TransactionModel.expenseType;
+      _category = _normalizeCategory(
+        widget.initialCategory ?? _categories.first,
+      );
+      _selectedDate = widget.initialDate ?? DateTime.now();
+      return;
+    }
 
     _titleController.text = transaction.title;
     _amountController.text = transaction.amount.toStringAsFixed(0);
@@ -247,10 +279,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     if (!mounted) return;
 
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.errorMessage ?? 'Gagal menyimpan transaksi.'),
-        ),
+      await AppFeedbackDialog.showError(
+        context,
+        message: provider.errorMessage ?? 'Gagal menyimpan transaksi.',
       );
       return;
     }

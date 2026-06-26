@@ -9,6 +9,7 @@ import '../models/budget_model.dart';
 import '../models/transaction_model.dart';
 import '../providers/budget_provider.dart';
 import '../providers/transaction_provider.dart';
+import '../widgets/app_feedback_dialog.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/empty_state_widget.dart';
 
@@ -259,10 +260,9 @@ class _BudgetCard extends StatelessWidget {
     if (!context.mounted) return;
 
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.errorMessage ?? 'Gagal menghapus budget.'),
-        ),
+      await AppFeedbackDialog.showError(
+        context,
+        message: provider.errorMessage ?? 'Gagal menghapus budget.',
       );
     }
   }
@@ -533,10 +533,9 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
 
     if (!mounted) return;
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.errorMessage ?? 'Gagal menyimpan budget.'),
-        ),
+      await AppFeedbackDialog.showError(
+        context,
+        message: provider.errorMessage ?? 'Gagal menyimpan budget.',
       );
       return;
     }

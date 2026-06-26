@@ -9,12 +9,13 @@ import '../providers/saving_goal_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../services/remote_reset_service.dart';
+import '../widgets/app_feedback_dialog.dart';
 import 'login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
-  static const appVersion = '2.2.0';
+  static const appVersion = '2.3.0';
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -179,15 +180,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await context.read<BillProvider>().loadBills();
       if (!context.mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Semua data berhasil dihapus')),
+      await AppFeedbackDialog.showSuccess(
+        context,
+        message: 'Semua data berhasil dihapus.',
       );
     } catch (_) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gagal menghapus data. Periksa koneksi internet.'),
-        ),
+      await AppFeedbackDialog.showError(
+        context,
+        message: 'Gagal menghapus data. Periksa koneksi internet.',
       );
     } finally {
       if (mounted) setState(() => _isResetting = false);
@@ -209,9 +210,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     } else {
       final errorMessage = context.read<AuthProvider>().errorMessage;
-      ScaffoldMessenger.of(
+      await AppFeedbackDialog.showError(
         context,
-      ).showSnackBar(SnackBar(content: Text(errorMessage ?? 'Logout gagal.')));
+        message: errorMessage ?? 'Logout gagal.',
+      );
     }
   }
 
@@ -408,17 +410,16 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
     if (!mounted) return;
 
     if (success) {
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profil berhasil diperbarui.')),
+      await AppFeedbackDialog.showSuccess(
+        context,
+        message: 'Profil berhasil diperbarui.',
       );
+      if (!mounted) return;
+      Navigator.of(context).pop();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            authProvider.errorMessage ?? 'Gagal memperbarui profil.',
-          ),
-        ),
+      await AppFeedbackDialog.showError(
+        context,
+        message: authProvider.errorMessage ?? 'Gagal memperbarui profil.',
       );
     }
   }

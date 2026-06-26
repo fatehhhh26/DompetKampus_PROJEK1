@@ -5,12 +5,13 @@ import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/utils/currency_formatter.dart';
 import '../models/bill_model.dart';
-import '../models/budget_model.dart';
+import '../models/financial_insight_model.dart';
 import '../models/transaction_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/bill_provider.dart';
 import '../providers/budget_provider.dart';
 import '../providers/transaction_provider.dart';
+import '../services/financial_insight_service.dart';
 import '../widgets/balance_card.dart';
 import '../widgets/empty_state_widget.dart';
 import '../widgets/transaction_card.dart';
@@ -138,28 +139,16 @@ class _MonthlyInsightCard extends StatelessWidget {
 
   final List<TransactionModel> transactions;
   final BudgetProvider budgetProvider;
+  static const _insightService = FinancialInsightService();
 
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final currentMonthTransactions = transactions.where((transaction) {
-      return transaction.date.month == now.month &&
-          transaction.date.year == now.year;
-    }).toList();
-    final currentMonthExpenses = currentMonthTransactions
-        .where(
-          (transaction) => transaction.type == TransactionModel.expenseType,
-        )
-        .toList();
-    final totalExpense = currentMonthExpenses.fold<double>(
-      0,
-      (total, transaction) => total + transaction.amount,
-    );
-    final biggestCategory = _biggestExpenseCategory(currentMonthExpenses);
-    final criticalBudget = budgetProvider.getMostCriticalBudget(
-      month: now.month,
-      year: now.year,
+    final insights = _insightService.generateSmartInsights(
       transactions: transactions,
+      budgets: budgetProvider.budgets,
+      month: DateTime(now.year, now.month),
+      today: now,
     );
 
     return Card(
@@ -186,65 +175,90 @@ class _MonthlyInsightCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            if (currentMonthExpenses.isEmpty)
+            if (insights.isEmpty)
               const Text(
                 'Belum ada pengeluaran bulan ini. Mulai catat transaksi agar insight keuanganmu muncul di sini.',
                 style: TextStyle(color: AppColors.textSecondary),
               )
-            else ...[
-              _InsightRow(
-                label: 'Kategori terbesar',
-                value: biggestCategory ?? '-',
-              ),
-              _InsightRow(
-                label: 'Total pengeluaran',
-                value: CurrencyFormatter.format(totalExpense),
-              ),
-              _InsightRow(
-                label: 'Budget paling kritis',
-                value: criticalBudget == null
-                    ? 'Belum ada budget'
-                    : criticalBudget.category,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _messageFor(totalExpense, criticalBudget),
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-            ],
+            else
+              for (var index = 0; index < insights.length; index++) ...[
+                _SmartInsightTile(insight: insights[index]),
+                if (index != insights.length - 1)
+                  const Divider(height: 18, color: AppColors.border),
+              ],
           ],
         ),
       ),
     );
   }
+}
 
-  String? _biggestExpenseCategory(List<TransactionModel> expenses) {
-    final grouped = <String, double>{};
-    for (final transaction in expenses) {
-      grouped[transaction.category] =
-          (grouped[transaction.category] ?? 0) + transaction.amount;
-    }
+class _SmartInsightTile extends StatelessWidget {
+  const _SmartInsightTile({required this.insight});
 
-    if (grouped.isEmpty) return null;
-    final entries = grouped.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    return entries.first.key;
+  final FinancialInsightModel insight;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _colorForSeverity(insight.severity);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(_iconForType(insight.type), color: color, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                insight.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                insight.message,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
-  String _messageFor(double totalExpense, BudgetModel? criticalBudget) {
-    if (criticalBudget == null) {
-      return 'Tambahkan budget bulanan agar pengeluaranmu lebih mudah dikontrol.';
-    }
+  Color _colorForSeverity(String severity) {
+    return switch (severity) {
+      FinancialInsightModel.severityDanger => AppColors.expense,
+      FinancialInsightModel.severityWarning => const Color(0xFFF59E0B),
+      FinancialInsightModel.severitySuccess => AppColors.income,
+      _ => AppColors.primary,
+    };
+  }
 
-    final usage = budgetProvider.usagePercent(criticalBudget, transactions);
-    if (usage >= 100) {
-      return 'Budget ${criticalBudget.category} sudah terlampaui. Coba tahan pengeluaran di kategori ini.';
-    }
-    if (usage >= 75) {
-      return 'Budget ${criticalBudget.category} hampir habis. Masih bisa dikendalikan dengan sedikit rem.';
-    }
-
-    return 'Kondisi bulan ini masih aman. Pertahankan ritme pengeluaranmu.';
+  IconData _iconForType(String type) {
+    return switch (type) {
+      FinancialInsightModel.typeBudget => Icons.account_balance_wallet_outlined,
+      FinancialInsightModel.typeSaving => Icons.savings_outlined,
+      FinancialInsightModel.typeSpending => Icons.trending_up_rounded,
+      FinancialInsightModel.typeRecommendation =>
+        Icons.health_and_safety_outlined,
+      _ => Icons.auto_awesome_outlined,
+    };
   }
 }
 
@@ -368,42 +382,6 @@ class _BillSummaryRow extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InsightRow extends StatelessWidget {
-  const _InsightRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
           ),
         ],
       ),

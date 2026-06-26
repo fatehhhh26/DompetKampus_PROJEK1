@@ -7,6 +7,7 @@ import '../core/constants/app_colors.dart';
 import '../core/utils/currency_formatter.dart';
 import '../models/saving_goal_model.dart';
 import '../providers/saving_goal_provider.dart';
+import '../widgets/app_feedback_dialog.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/empty_state_widget.dart';
 
@@ -273,10 +274,9 @@ class _SavingGoalCard extends StatelessWidget {
     if (!context.mounted) return;
 
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.errorMessage ?? 'Gagal menghapus target.'),
-        ),
+      await AppFeedbackDialog.showError(
+        context,
+        message: provider.errorMessage ?? 'Gagal menghapus target.',
       );
     }
   }
@@ -510,10 +510,9 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
 
     if (!mounted) return;
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.errorMessage ?? 'Gagal menyimpan target.'),
-        ),
+      await AppFeedbackDialog.showError(
+        context,
+        message: provider.errorMessage ?? 'Gagal menyimpan target.',
       );
       return;
     }
@@ -592,10 +591,9 @@ class _AddAmountDialogState extends State<_AddAmountDialog> {
 
     if (!mounted) return;
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.errorMessage ?? 'Gagal menambah nominal.'),
-        ),
+      await AppFeedbackDialog.showError(
+        context,
+        message: provider.errorMessage ?? 'Gagal menambah nominal.',
       );
       return;
     }

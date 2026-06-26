@@ -6,6 +6,7 @@ import '../providers/bill_provider.dart';
 import '../providers/budget_provider.dart';
 import '../providers/saving_goal_provider.dart';
 import '../providers/transaction_provider.dart';
+import '../widgets/app_feedback_dialog.dart';
 import '../widgets/custom_button.dart';
 import 'main_navigation_screen.dart';
 import 'register_screen.dart';
@@ -144,20 +145,19 @@ class _LoginScreenState extends State<LoginScreen> {
           budgetProvider.errorMessage ??
           billProvider.errorMessage;
       if (loadError != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Sebagian data gagal dimuat. Periksa koneksi internet.',
-            ),
-          ),
+        await AppFeedbackDialog.showInfo(
+          context,
+          message: 'Sebagian data gagal dimuat. Periksa koneksi internet.',
         );
       }
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? 'Login gagal.')),
+      await AppFeedbackDialog.showError(
+        context,
+        message: authProvider.errorMessage ?? 'Login gagal.',
       );
     }
   }

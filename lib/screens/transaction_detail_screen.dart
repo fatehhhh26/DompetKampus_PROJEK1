@@ -6,6 +6,7 @@ import '../core/constants/app_colors.dart';
 import '../core/utils/currency_formatter.dart';
 import '../models/transaction_model.dart';
 import '../providers/transaction_provider.dart';
+import '../widgets/app_feedback_dialog.dart';
 import '../widgets/custom_button.dart';
 import 'add_transaction_screen.dart';
 
@@ -152,8 +153,9 @@ class TransactionDetailScreen extends StatelessWidget {
     );
 
     if (updated != true || !context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Transaksi berhasil diperbarui.')),
+    await AppFeedbackDialog.showSuccess(
+      context,
+      message: 'Transaksi berhasil diperbarui.',
     );
   }
 
@@ -187,18 +189,19 @@ class TransactionDetailScreen extends StatelessWidget {
     if (!context.mounted) return;
 
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.errorMessage ?? 'Gagal menghapus transaksi.'),
-        ),
+      await AppFeedbackDialog.showError(
+        context,
+        message: provider.errorMessage ?? 'Gagal menghapus transaksi.',
       );
       return;
     }
 
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Transaksi berhasil dihapus.')),
+    await AppFeedbackDialog.showSuccess(
+      context,
+      message: 'Transaksi berhasil dihapus.',
     );
+    if (!context.mounted) return;
+    Navigator.of(context).pop();
   }
 }
 

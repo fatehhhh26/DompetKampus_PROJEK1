@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_colors.dart';
 import 'chart_screen.dart';
+import 'receipt_scan_screen.dart';
 import 'report_screen.dart';
 import 'saving_goal_screen.dart';
 import 'settings_screen.dart';
@@ -32,6 +33,12 @@ class MenuScreen extends StatelessWidget {
             _MenuSection(
               title: 'Keuangan',
               children: [
+                _MenuItem(
+                  icon: Icons.document_scanner_outlined,
+                  title: 'Scan Struk',
+                  subtitle: 'Buat draft pengeluaran dari foto struk',
+                  onTap: () => _open(context, const ReceiptScanScreen()),
+                ),
                 _MenuItem(
                   icon: Icons.pie_chart_outline_rounded,
                   title: 'Grafik Pengeluaran',

@@ -11,6 +11,7 @@ import '../providers/saving_goal_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../services/excel_service.dart';
 import '../services/pdf_service.dart';
+import '../widgets/app_feedback_dialog.dart';
 import '../widgets/custom_button.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -131,17 +132,17 @@ class _ReportScreenState extends State<ReportScreen> {
       );
 
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Laporan Excel berhasil dibuat')),
+      await AppFeedbackDialog.showSuccess(
+        context,
+        message: 'Laporan Excel berhasil dibuat.',
       );
     } catch (error, stackTrace) {
       debugPrint('Export Excel error: $error');
       debugPrintStack(stackTrace: stackTrace);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gagal membuat laporan Excel. Silakan coba lagi.'),
-        ),
+      await AppFeedbackDialog.showError(
+        context,
+        message: 'Gagal membuat laporan Excel. Silakan coba lagi.',
       );
     } finally {
       if (mounted) setState(() => _isExportingExcel = false);
